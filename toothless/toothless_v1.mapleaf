@@ -1,0 +1,207 @@
+# May Launch 10k Apogee
+# MAPLEAF
+# Aaron Arellano, Sabhu Chaudhry
+# CORRECTED VERSION - February 2026
+# See SimDefinitionTemplate.mapleaf for file format info & description of all options
+
+
+SimControl{
+    timeDiscretization RK45Adaptive
+    timeStep 0.01 #sec
+
+    EndCondition Apogee
+
+    loggingLevel    2
+    RocketPlot      On
+
+    plot    FlightAnimation CP Mach Aero CG Position Velocity 
+}
+
+Environment{
+    ConstantMeanWind{
+        velocity                    ( 3 0 0 ) #m/s - 3 m/s headwind
+    }
+    
+    LaunchSite{
+        elevation             871.603032 #m - Viking, AB elevation above sea level
+        
+        # Launch rail will prevent rocket deviation until it travels this length
+        railLength              0.1 #m (40 feet)
+
+        EarthModel              Flat
+
+        #### Atmospheric Properties ####
+        AtmosphericPropertiesModel  USStandardAtmosphere
+    }
+
+    TurbulenceModel             PinkNoise3D
+    turbulenceOffWhenUnderChute False # Increases time step we can take while descending
+
+    PinkNoiseModel{
+        turbulenceIntensity     10 # % velocity standard deviation / mean wind velocity
+
+
+        # Set the random seeds for repeatable simulations
+        randomSeed1             63583
+        randomSeed2             63583
+        randomSeed3             63583
+    }
+
+    MeanWindModel              Constant #SampledRadioSondeData
+
+    # SampledRadioSondeData{
+    #     launchMonth             Feb # Three letter month code - uses yearly avg data if absent
+    #     # Place1 name, weighting coefficient 1, Place2 name, weighting coefficient 2, ... - Corresponding radio sonde data files must be in MAPLEAF/Examples/Wind
+    #     locationsToSample       Edmonton 1
+    #     locationASLAltitudes    871.603032 # m ASL - Used to convert ASL altitude data provided in radio sonde files to AGL altitudes
+    #     randomSeed              228010 # Set to remove randomization from sampling, have a repeatable simulation
+    # }
+
+    # SampledGroundWindData{
+    #     launchMonth             Feb # Three letter month code - uses yearly avg data if absent
+    #     # Place1 name, weighting coefficient1, Place2 name, weighting coefficient2, ... - Corresponding wind rose data files must be in MAPLEAF/Examples/Wind
+    #     locationsToSample       Edmonton 1
+    #     locationASLAltitudes    871.603032 # m ASL - Used to convert ASL altitude data provided in wind rose files to AGL altitudes
+    #     randomSeed              228010 # Set to remove randomization from sampling, have a repeat
+    #     #TODO: randomSeed
+    # }
+}
+
+Rocket{
+    name                Toothless
+    rotationAxis        (0 1 0) # Rotation axis in launch tower ENU frame
+    rotationAngle       3 # degrees - simulates rail cant
+    position            (0 0 0) # m - initial position AGL (changed from 3m to 0m)
+    velocity            (0 0 0) # m/s - initial velocity
+    angularVelocity     (0 0 0) # rad/s - initial angular velocity
+
+    Aero{
+        addZeroLengthBoatTailsToAccountForBaseDrag      true
+        fullyTurbulentBL                                true
+    }
+
+    FirstStage{
+        class           Stage
+        stageNumber     1
+        position        (0 0 0) #m - Position of stage tip, relative to tip of rocket
+
+        NoseCone{
+            class               Nosecone
+            mass                0.647 #kg - from OpenRocket
+            baseDiameter        0.102 #m (4 inch)
+            position            (0 0 0)
+            cg                  (0 0 -0.2135) #m - from OpenRocket
+            aspectRatio         4.1862745098 # gives length of 0.427m
+            shape               tangentOgive
+            surfaceRoughness    0.00002 #m - smooth fiberglass finish
+        }
+
+        RecoveryTube{
+            class               Bodytube
+            mass                1.664 #kg - tube + recovery components mass
+            position            (0 0 -0.427) #m - starts at end of nosecone
+            cg                  (0 0 -0.343) #m - CG offset from tube front
+            
+            outerDiameter       0.102 #m (4 inch)
+            length              0.686 #m
+            surfaceRoughness    0.00002 #m
+        }
+
+        CameraAssembly{
+            class               Mass
+            mass                0.07 #kg
+            position            (0 0 -1.217) #m - positioned in recovery section
+            cg                  (0 0 0)
+            MOI                 (0.0118241136 0.0118241136 0.007016506973) #kg*m^2
+        }
+
+        Avionics{
+            class               Mass
+            mass                0.650 #kg - avionics bay assembly
+            position            (0 0 -1.014) #m - positioned in recovery section
+            cg                  (0 0 0)
+            MOI                 (0.0118241136 0.0118241136 0.007016506973) #kg*m^2
+        }
+
+        RecoverySystem{
+            class               RecoverySystem
+            mass                2.303 #kg - drogue + main parachutes
+            position            (0 0 -0.99) #m
+            cg                  (0 0 -0.99) #m
+            numStages           2
+
+            # Drogue at apogee
+            stage1Trigger       Apogee
+            stage1ChuteArea     1.27 #m^2
+            stage1Cd            0.8 # flat circular chute
+            stage1DelayTime     0 #s
+            
+            # Main at 700 ft AGL
+            stage2Trigger       Altitude
+            stage2TriggerValue  1084.36#213.36 #m (700 ft AGL)
+            stage2ChuteArea     0.533 #m^2
+            stage2Cd            0.8
+            stage2DelayTime     0 #s
+        }
+
+        BodyTube{
+            class               Bodytube
+            mass                1.056 #kg - tube mass only
+            position            (0 0 -1.113) #m - starts at -(nosecone + recovery tube)
+            cg                  (0 0 -0.432) #m - CG offset from tube front
+            
+            outerDiameter       0.102 #m (4 inch)
+            length              0.864 #m
+            surfaceRoughness    0.00002 #m
+        }
+
+        MotorCase {
+            class           Bodytube
+            mass            0.599 # k550w : 0.598, k940 : 0.599
+            position        (0 0 -1.545)
+            cg              (0 0 0)
+            outerDiameter   0.054
+            length          0.41 # k550w: 0.41, k940: 0.404
+
+            surfaceRoughness    0.000050
+        }
+
+        Fins{
+            class               FinSet 
+            mass                0.623 #kg 
+            position            (0 0 -1.675) #m
+            cg                  (0 0 0)
+
+            # Fin Placement / Distribution
+            numFins             4
+            finCantAngle        0 # degrees
+            firstFinAngle       0 # degrees - first fin aligned with local X-axis
+            
+            # Planform - CORRECTED from freeform fin coordinates
+            sweepAngle          45.2 # degrees - CORRECTED from coordinates
+            rootChord           0.305 # m - CORRECTED (was 0.1524)
+            tipChord            0.159 # m - CORRECTED (was 0.0762)
+            span                0.147 # m - CORRECTED (was 0.0635)
+
+            # Material properties
+            thickness           0.00635 # m (1/8 inch) - CORRECTED (was 0.00635)
+            surfaceRoughness    0.0002 # m - slightly rough composite
+
+            LeadingEdge{
+                shape           Round
+                radius          0.003175 # m - from OpenRocket
+            }
+
+            TrailingEdge{
+                shape           Round
+                radius          0.003175 # m - from OpenRocket
+            }
+        }
+
+        Motor{
+            class               Motor
+            # C:\Users\aaron\soar_jan_10\K550W_interpolated_0p01s.txt
+            path                C:\Users\aaron\soar_jan_10\K940.txt 
+        }
+    }
+}
