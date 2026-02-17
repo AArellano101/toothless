@@ -1,6 +1,6 @@
 # May Launch 10k Apogee
 # MAPLEAF
-# Aaron Arellano, Sabhu Chaudhry
+# Sabhu Chaudhry, Aaron Arellano
 # CORRECTED VERSION - February 2026
 # See SimDefinitionTemplate.mapleaf for file format info & description of all options
 
@@ -11,7 +11,7 @@ SimControl{
 
     EndCondition Apogee
 
-    loggingLevel    2
+    loggingLevel    1
     RocketPlot      On
 
     plot    FlightAnimation CP Mach Aero CG Position Velocity 
@@ -26,7 +26,7 @@ Environment{
         elevation             871.603032 #m - Viking, AB elevation above sea level
         
         # Launch rail will prevent rocket deviation until it travels this length
-        railLength              0.1 #m (40 feet)
+        railLength              3.3 #m (40 feet)
 
         EarthModel              Flat
 
@@ -38,8 +38,8 @@ Environment{
     turbulenceOffWhenUnderChute False # Increases time step we can take while descending
 
     PinkNoiseModel{
-        turbulenceIntensity     10 # % velocity standard deviation / mean wind velocity
-
+        turbulenceIntensity     5 # % velocity standard deviation / mean wind velocity
+        velocityStdDeviation    5 # m/s standard deviation of pink noise model
 
         # Set the random seeds for repeatable simulations
         randomSeed1             63583
@@ -71,7 +71,7 @@ Rocket{
     name                Toothless
     rotationAxis        (0 1 0) # Rotation axis in launch tower ENU frame
     rotationAngle       3 # degrees - simulates rail cant
-    position            (0 0 0) # m - initial position AGL (changed from 3m to 0m)
+    position            (0 0 3.3) # m - initial position AGL (changed from 3m to 0m)
     velocity            (0 0 0) # m/s - initial velocity
     angularVelocity     (0 0 0) # rad/s - initial angular velocity
 
@@ -87,7 +87,7 @@ Rocket{
 
         NoseCone{
             class               Nosecone
-            mass                0.647 #kg - from OpenRocket
+            mass                0.430 #kg - from OpenRocket
             baseDiameter        0.102 #m (4 inch)
             position            (0 0 0)
             cg                  (0 0 -0.2135) #m - from OpenRocket
@@ -98,7 +98,7 @@ Rocket{
 
         RecoveryTube{
             class               Bodytube
-            mass                1.664 #kg - tube + recovery components mass
+            mass                0.867 #kg - tube + recovery components mass
             position            (0 0 -0.427) #m - starts at end of nosecone
             cg                  (0 0 -0.343) #m - CG offset from tube front
             
@@ -112,20 +112,18 @@ Rocket{
             mass                0.07 #kg
             position            (0 0 -1.217) #m - positioned in recovery section
             cg                  (0 0 0)
-            MOI                 (0.0118241136 0.0118241136 0.007016506973) #kg*m^2
         }
 
         Avionics{
             class               Mass
-            mass                0.650 #kg - avionics bay assembly
+            mass                0.451 #kg - avionics bay assembly
             position            (0 0 -1.014) #m - positioned in recovery section
             cg                  (0 0 0)
-            MOI                 (0.0118241136 0.0118241136 0.007016506973) #kg*m^2
         }
 
         RecoverySystem{
             class               RecoverySystem
-            mass                2.303 #kg - drogue + main parachutes
+            mass                0.378 #kg - drogue + main parachutes
             position            (0 0 -0.99) #m
             cg                  (0 0 -0.99) #m
             numStages           2
@@ -138,15 +136,15 @@ Rocket{
             
             # Main at 700 ft AGL
             stage2Trigger       Altitude
-            stage2TriggerValue  1084.36#213.36 #m (700 ft AGL)
+            stage2TriggerValue  1084.733032#213.36 #m (700 ft AGL)
             stage2ChuteArea     0.533 #m^2
             stage2Cd            0.8
             stage2DelayTime     0 #s
         }
 
-        BodyTube{
+        FinCan{
             class               Bodytube
-            mass                1.056 #kg - tube mass only
+            mass                1.283 #kg - tube mass only
             position            (0 0 -1.113) #m - starts at -(nosecone + recovery tube)
             cg                  (0 0 -0.432) #m - CG offset from tube front
             
@@ -155,20 +153,9 @@ Rocket{
             surfaceRoughness    0.00002 #m
         }
 
-        MotorCase {
-            class           Bodytube
-            mass            0.599 # k550w : 0.598, k940 : 0.599
-            position        (0 0 -1.545)
-            cg              (0 0 0)
-            outerDiameter   0.054
-            length          0.41 # k550w: 0.41, k940: 0.404
-
-            surfaceRoughness    0.000050
-        }
-
         Fins{
             class               FinSet 
-            mass                0.623 #kg 
+            mass                0.952 #kg 
             position            (0 0 -1.675) #m
             cg                  (0 0 0)
 
@@ -180,8 +167,8 @@ Rocket{
             # Planform - CORRECTED from freeform fin coordinates
             sweepAngle          45.2 # degrees - CORRECTED from coordinates
             rootChord           0.305 # m - CORRECTED (was 0.1524)
-            tipChord            0.159 # m - CORRECTED (was 0.0762)
-            span                0.147 # m - CORRECTED (was 0.0635)
+            tipChord            0.1651 # m - CORRECTED (was 0.0762)
+            span                0.1422 # m - CORRECTED (was 0.0635)
 
             # Material properties
             thickness           0.00635 # m (1/8 inch) - CORRECTED (was 0.00635)
@@ -197,6 +184,13 @@ Rocket{
                 radius          0.003175 # m - from OpenRocket
             }
         }
+
+        MotorCasing{
+                class			Mass
+                mass			0.599 # or mass with motor - dry mass without #0.687 for k550, 0.605 for k940 
+                position		(0 0 -1.778) # at fins
+                cg				(0 0 0)
+	    }
 
         Motor{
             class               Motor
